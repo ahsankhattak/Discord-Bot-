@@ -1,0 +1,343 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "6aa63095-2082-4126-a88f-fdf377abbe46",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "897d7245-8949-4245-876a-5cc142ebcdb7",
+      "name": "Webhook",
+      "webhookId": "6aa63095-2082-4126-a88f-fdf377abbe46"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        304,
+        0
+      ],
+      "id": "5f631db6-b2b3-49e0-8813-19f5475dd3fb",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VEyZZ0xW4rwOtx10",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.choices[0].message.content;\nconst parsed = JSON.parse(raw);\n\nreturn {\n  json: {\n    reply: parsed.reply,\n    status: parsed.status,\n    service: parsed.service,\n    date: parsed.date,\n    time: parsed.time,\n    phone: parsed.phone,\n    channel_id: $('Webhook').item.json.body.channel_id,\n    author: $('Webhook').item.json.body.author,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        16
+      ],
+      "id": "13eeb291-bb21-48f4-ad90-778597029ea8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b02e248d-52f2-41f8-9e5a-7eb076159a97",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        96
+      ],
+      "id": "ac9cd1c0-f426-45ac-9289-ec2d17dddf8e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1KUhuGojWuodvafWYGg0yPm-BJMeNEJjN4JrIEszFT_4",
+          "mode": "list",
+          "cachedResultName": "SlotWise Bookings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KUhuGojWuodvafWYGg0yPm-BJMeNEJjN4JrIEszFT_4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KUhuGojWuodvafWYGg0yPm-BJMeNEJjN4JrIEszFT_4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name/Username": "={{ $json.author }}",
+            "Service": "={{ $json.service }}",
+            "Date": "={{ $json.date }}",
+            "Time": "={{ $json.time }}",
+            "Timestamp": "={{ $now }}",
+            "Phone Num": "= {{ $json.phone }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name/Username",
+              "displayName": "Name/Username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Num",
+              "displayName": "Phone Num",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -176
+      ],
+      "id": "e83ca371-8181-46b9-9342-d3807a500419",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "D9zIFh4XIb8hlfmc",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1463866632534360107",
+          "mode": "list",
+          "cachedResultName": "@__ ktk' server",
+          "cachedResultUrl": "https://discord.com/channels/1463866632534360107"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1463866633847181399",
+          "mode": "list",
+          "cachedResultName": "general",
+          "cachedResultUrl": "https://discord.com/channels/1463866632534360107/1463866633847181399"
+        },
+        "content": "=   {{ $('Code in JavaScript').item.json.reply }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        992,
+        144
+      ],
+      "id": "2e286a52-ba54-45c7-9a92-06326487fdb8",
+      "name": "Send a message",
+      "webhookId": "bffab268-fc29-40ba-b27f-98ed5587a1ac",
+      "credentials": {
+        "discordBotApi": {
+          "id": "GiBOmOO5r9gsxsRv",
+          "name": "Discord Bot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst channelId = $json.body.channel_id;\n\nif (!staticData.conversations) staticData.conversations = {};\nif (!staticData.conversations[channelId]) staticData.conversations[channelId] = [];\n\nstaticData.conversations[channelId].push({ role: \"user\", content: $json.body.content });\n\nconst systemMsg = {\n  role: \"system\",\n  content: \"You are SlotWise, a booking assistant for a restaurant/salon. Guide the user through: 1) asking if they want a table or an appointment, 2) if it's a table, ask specifically how many people the party will be, and any occasion (birthday, anniversary, casual dinner, etc.); if it's an appointment, ask which service (haircut, facial, manicure), 3) preferred day and time, 4) offer these 3 mock slots: '5:00 PM', '6:30 PM', '8:00 PM', 5) once they pick a slot, ask for their phone number to confirm the booking, 6) once they provide a phone number, confirm with a full summary including party size/service and the phone number. Reply ONLY with valid JSON: {\\\"reply\\\": \\\"...\\\", \\\"status\\\": \\\"in_progress\\\" or \\\"confirmed\\\" or \\\"handoff\\\", \\\"service\\\": \\\"...\\\" or null, \\\"date\\\": \\\"...\\\" or null, \\\"time\\\": \\\"...\\\" or null, \\\"phone\\\": \\\"...\\\" or null}. The 'service' field should include party size if it's a table (e.g. 'Table for 4 - Birthday'). Only set status to 'confirmed' after the phone number has been collected. Use the full conversation history to remember what's already been said — do not repeat questions already answered.\"\n};\n\nconst requestBody = {\n  model: \"llama-3.3-70b-versatile\",\n  messages: [systemMsg, ...staticData.conversations[channelId].slice(-10)]\n};\n\nreturn {\n  json: {\n    requestBody: JSON.stringify(requestBody),\n    channel_id: channelId,\n    author: $json.body.author\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        -32
+      ],
+      "id": "ba65cbb9-d5a6-4a7f-92dc-9e26e634b82a",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a95d59ac-631f-4d83-9fb3-f35b3c314511",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bb80f6efc487ae62f0f735a22d34ed2cd12bfb5ce8582a2b88d2991630aa1ccd"
+  },
+  "nodeGroups": [],
+  "id": "I4KCGbi0b3QCtwZJ",
+  "tags": []
+}
