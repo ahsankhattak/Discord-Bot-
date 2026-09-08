@@ -1,0 +1,24 @@
+{
+  "total_sales": 180504.3,
+  "total_orders": 296,
+  "total_quantity": 3053,
+  "total_profit": 23232.38,
+  "top_5_products": {
+    "Canon imageCLASS 2200 Advanced Copier": 13999.96,
+    "Global Troy Executive Leather Low-Back Tilter": 3055.98,
+    "Hon 4070 Series Pagoda Armless Upholstered Stacking Chairs": 2888.13,
+    "Ativa V4110MDD Micro-Cut Shredder": 2799.96,
+    "Sharp AL-1530CS Digital Copier": 2799.94
+  },
+  "sales_by_region": {
+    "West": 107483.06,
+    "East": 41705.12,
+    "South": 17309.13,
+    "Central": 14006.99
+  },
+  "sales_by_category": {
+    "Technology": 72708.17,
+    "Furniture": 59219.21,
+    "Office Supplies": 48576.92
+  }
+}
