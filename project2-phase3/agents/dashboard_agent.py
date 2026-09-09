@@ -1,0 +1,140 @@
+﻿"""
+Dashboard Agent (Phase 3 - dynamic)
+------------------------------------
+Phase 2 version assumed fixed keys like "sales_by_region" and 3 hardcoded
+charts. This version reads whatever keys are ACTUALLY present in
+insights.json and builds the dashboard around them - so it adapts to
+retail, inventory, SaaS, or any other domain's shape of data.
+
+Consistent output structure across domains:
+- A "stat cards" row for scalar numbers (total_value, unique_ids, total_records)
+- A bar chart IF a category breakdown is present
+- A line chart IF a time trend is present
+- A fallback message if neither breakdown exists (still doesn't crash)
+"""
+
+import json
+import os
+import matplotlib
+matplotlib.use("Agg")  # no GUI needed, just save images
+import matplotlib.pyplot as plt
+
+
+def build_dashboard(insights: dict, assets_dir: str = "assets") -> str:
+    print(f"[Dashboard Agent] Building dashboard for domain: {insights.get('domain', 'unknown')}")
+    os.makedirs(assets_dir, exist_ok=True)
+
+    errors = []
+    chart_files = []
+
+    if "top_5_by_category" in insights and insights["top_5_by_category"]:
+        try:
+            plt.figure(figsize=(6, 4))
+            cats = list(insights["top_5_by_category"].keys())
+            vals = list(insights["top_5_by_category"].values())
+            plt.bar(cats, vals, color="#4fd1c5")
+            plt.title(f"Top {insights.get('category_col_name', 'Category')} Breakdown")
+            plt.ylabel(insights.get("value_col_name", "Value"))
+            plt.xticks(rotation=20, ha="right")
+            plt.tight_layout()
+            path = os.path.join(assets_dir, "chart_category.png")
+            plt.savefig(path)
+            plt.close()
+            chart_files.append(("chart_category.png", "Category Breakdown"))
+            print("[Dashboard Agent] Saved category chart")
+        except Exception as e:
+            errors.append(f"category chart failed: {e}")
+
+    if "trend_over_time" in insights and insights["trend_over_time"]:
+        try:
+            plt.figure(figsize=(7, 4))
+            periods = list(insights["trend_over_time"].keys())
+            vals = list(insights["trend_over_time"].values())
+            plt.plot(periods, vals, color="#f2a65a", marker="o", markersize=3)
+            plt.title(f"{insights.get('value_col_name', 'Value')} Over Time")
+            plt.xticks(rotation=60, ha="right", fontsize=7)
+            plt.tight_layout()
+            path = os.path.join(assets_dir, "chart_trend.png")
+            plt.savefig(path)
+            plt.close()
+            chart_files.append(("chart_trend.png", "Trend Over Time"))
+            print("[Dashboard Agent] Saved trend chart")
+        except Exception as e:
+            errors.append(f"trend chart failed: {e}")
+
+    if not chart_files:
+        errors.append("No category or time-based data available - showing stats only")
+        print("[Dashboard Agent] No chartable data found, falling back to stats-only view")
+
+    stat_labels = {
+        "total_value": insights.get("value_col_name", "Total Value"),
+        "total_records": "Total Records",
+        "unique_ids": insights.get("id_col_name", "Unique IDs"),
+    }
+    stat_cards_html = ""
+    for key, label in stat_labels.items():
+        if key in insights:
+            val = insights[key]
+            display_val = f"{val:,.2f}" if isinstance(val, float) else f"{val:,}"
+            stat_cards_html += f"""
+            <div class="stat"><div class="num">{display_val}</div><div class="label">{label}</div></div>"""
+
+    charts_html = ""
+    for filename, title in chart_files:
+        charts_html += f"""
+        <div class="chart-box">
+          <h3>{title}</h3>
+          <img src="{filename}" alt="{title}">
+        </div>"""
+
+    errors_html = ""
+    if errors:
+        error_items = "".join(f"<li>{e}</li>" for e in errors)
+        errors_html = f"""
+        <div class="notice"><strong>Notes:</strong><ul>{error_items}</ul></div>"""
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{insights.get('domain', 'Data')} - Dashboard</title>
+<style>
+  body {{ background: #0f1420; color: #e7e6e1; font-family: Arial, sans-serif; padding: 2rem; }}
+  h1 {{ font-size: 1.8rem; text-transform: capitalize; }}
+  .stats {{ display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1.5rem 0 2rem; }}
+  .stat {{ background: #161c2b; border: 1px solid #2b3348; border-radius: 8px; padding: 1rem 1.5rem; }}
+  .stat .num {{ font-size: 1.6rem; color: #4fd1c5; font-weight: bold; }}
+  .stat .label {{ color: #97a0b5; font-size: 0.85rem; }}
+  .charts {{ display: flex; gap: 1.5rem; flex-wrap: wrap; }}
+  .chart-box img {{ background: white; border-radius: 8px; max-width: 420px; width: 100%; }}
+  .notice {{ margin-top: 2rem; background: #2b2416; border: 1px solid #6b5b1f; border-radius: 8px;
+             padding: 1rem 1.5rem; color: #e8d38a; font-size: 0.9rem; }}
+</style>
+</head>
+<body>
+  <h1>{insights.get('domain', 'unknown').replace('_', ' ')} — Results</h1>
+  <p>Auto-generated by the domain-aware multi-agent pipeline: Domain Config → Clean → Analysis → Dashboard</p>
+
+  <div class="stats">{stat_cards_html}
+  </div>
+
+  <div class="charts">{charts_html}
+  </div>
+  {errors_html}
+</body>
+</html>
+"""
+
+    out_path = os.path.join(assets_dir, "dashboard.html")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"[Dashboard Agent] Saved dashboard to {out_path}")
+    return out_path
+
+
+if __name__ == "__main__":
+    with open("data/insights.json") as f:
+        insights = json.load(f)
+
+    build_dashboard(insights)
